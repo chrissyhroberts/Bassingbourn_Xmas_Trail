@@ -87,13 +87,9 @@ map <- leaflet(df) %>%
 
 ```
 
-## Map
-
 ```{r,echo=F}
 map
 ```
-
-## Addresses
 
 ```{r,echo=F}
 df <- df %>% arrange(as.numeric(number))
