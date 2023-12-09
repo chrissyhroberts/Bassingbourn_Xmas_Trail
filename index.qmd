@@ -12,6 +12,8 @@ library(leaflet)
 library(DT)
 library(knitr)
 library(kableExtra)
+library(httr)
+
 
 ###################################
 # Add list of addresses here
@@ -22,11 +24,11 @@ df<-tibble(
     "15 High St, Bassingbourn, UK",
     "27 High St, Bassingbourn, UK",
     "12 High St, Bassingbourn, UK",
-    "38 High St, Bassingbourn, UK",
+    "38 High St, Bassingbourn, Royston SG8 5LD",
     "13 Causeway, Bassingbourn, UK",
-    "24 Mill Lane, Bassingbourn, UK",
+    "24 Mill Ln, Bassingbourn, Royston SG8 5PR",
     "24a Old North Road, Bassingbourn, UK",
-    "14 Park View, Bassingbourn, UK",
+    "14 Park View, Bassingbourn, Royston SG8 5PS",
     "22 Park View, Bassingbourn, UK",
     "88 Spring Lane, Bassingbourn, UK",
     "24 Windmill Close, Bassingbourn, UK",
@@ -39,29 +41,54 @@ df<-tibble(
   )
 
 ###################################
-# Create a custom geocoding function which uses a free service from osm
+# Function for geocoding using LocationIQ
 ###################################
 
-custom_geocode <- function(address) {
-  url <- paste0("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=", URLencode(address))
-  result <- fromJSON(url)
-  if (length(result) > 0) {
-    return(data.frame(
-      lat = as.numeric(result$lat),
-      lon = as.numeric(result$lon)
-    ))
+google_geocode <- function(address, api_key) {
+  base_url <- "https://maps.googleapis.com/maps/api/geocode/json"
+  
+  # Define parameters
+  params <- list(
+    address = address,
+    key = api_key
+  )
+  
+  # Make the API request
+  response <- GET(url = base_url, query = params)
+  
+  # Check if the request was successful
+  if (http_status(response)$category == "Success") {
+    result <- content(response, "parsed")
+    if (result$status == "OK" && length(result$results) > 0) {
+      # Extract the first result
+      first_result <- result$results[[1]]
+      
+      return(data.frame(
+        lat = as.numeric(first_result$geometry$location$lat),
+        lon = as.numeric(first_result$geometry$location$lng),
+        formatted_address = first_result$formatted_address
+      ))
+    }
   } else {
-    return(data.frame(lat = NA, lon = NA))
+    # Print the error message (for debugging)
+    error_message <- content(response, "text")
+    cat("Geocoding error:", error_message, "\n")
   }
+  
+  # Return NA values if no result or an error occurred
+  return(data.frame(lat = NA, lon = NA, formatted_address = NA))
 }
+
 
 ###################################
 # Get the geocodes for the addresses and bind to original tibble
 ###################################
+api_key <- ""
+geocoded_data <- sapply(df$address, google_geocode, api_key)
+geocoded_data_df <- as.data.frame(t(geocoded_data))
 
-geocoded_data <- as_tibble(t(sapply(df$address, custom_geocode)))
 
-df<-cbind(df,geocoded_data) %>% 
+df<-cbind(df,geocoded_data_df)%>% 
   mutate(lat = as.numeric(lat),
          lon = as.numeric(lon),
          
