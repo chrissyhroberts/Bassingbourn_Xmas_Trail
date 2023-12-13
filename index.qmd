@@ -38,9 +38,10 @@ df<-tibble(
     "45 Elm Tree Drive, Bassingbourn, UK",
     "2 Appletree Row, Bassingbourn, UK",
     "62 Spring Lane, Bassingbourn, UK",
-    "38 Tower Close, Bassingbourn, UK"
+    "38 Tower Close, Bassingbourn, UK",
+    "74 High St, Bassingbourn, UK"
   ),
-  number = c(1,2,3,10,14,4,5,6,13,15,16,7,12,8,9,11,17,18,19)
+  number = c(1,2,3,10,14,4,5,6,13,15,16,7,12,8,9,11,17,18,19,20)
   )
 
 ###################################
